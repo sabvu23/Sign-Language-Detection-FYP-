@@ -120,8 +120,5 @@ X_train, X_test, y_train, y_test = train_test_split(image_data, numeric_labels, 
 # Further split the training data into training and validation sets (80% train, 20% validation)
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
-# Display the shape of the splits
-print(f"Training data shape: {X_train.shape}")
-print(f"Validation data shape: {X_val.shape}")
-print(f"Test data shape: {X_test.shape}")
+
 
