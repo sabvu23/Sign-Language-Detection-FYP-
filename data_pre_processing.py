@@ -33,33 +33,37 @@ print(f"Files extracted to {extract_folder}")
 extracted_files = os.listdir(extract_folder)
 print(extracted_files)
 
-# Update with your folder path
+# Define the dataset folder
+dataset_folder = extract_folder
 
-# List all files in the folder
-files = os.listdir(extract_folder)
+# Check for folders corresponding to alphabets
+alphabet_folders = [f for f in os.listdir(dataset_folder) if os.path.isdir(os.path.join(dataset_folder, f))]
 
-# Display the number of files and some sample file names
-print(f"Total files: {len(files)}")
-print(f"Sample files: {files[:10]}")  # Display first 10 files for a quick check
-
-# Define the path to the 'asl_alphabet_train' folder
-alphabet_train_folder = os.path.join(extract_folder, 'Dataset', 'asl_alphabet_train', 'asl_alphabet_train')
-
-# List all alphabet folders within 'asl_alphabet_train'
-alphabet_folders = [f for f in os.listdir(alphabet_train_folder) if os.path.isdir(os.path.join(alphabet_train_folder, f))]
+if not alphabet_folders:
+    print("No alphabet folders found in the dataset. Please check the dataset structure.")
+else:
+    print(f"Alphabet folders found: {alphabet_folders[:5]}")  # Display first 5 folders for verification
 
 # Initialize a variable to track image shapes
 all_images_same_shape = True
 
 # Iterate through alphabet folders and image files
 for alphabet_folder in alphabet_folders:
-    for image_file in os.listdir(os.path.join(alphabet_train_folder, alphabet_folder)):
-        image_path = os.path.join(alphabet_train_folder, alphabet_folder, image_file)
+    alphabet_folder_path = os.path.join(dataset_folder, alphabet_folder)
+
+    for image_file in os.listdir(alphabet_folder_path):
+        image_path = os.path.join(alphabet_folder_path, image_file)
+
+        # Skip if the current item is a directory
+        if os.path.isdir(image_path):
+            continue
 
         try:
+            # Open the image and convert it to a NumPy array
             image = Image.open(image_path)
             image_array = np.array(image)
 
+            # Check if the image has the desired shape (200, 200, 3)
             if image_array.shape != (200, 200, 3):
                 all_images_same_shape = False
                 print(f"Image with different shape found: {image_path}, Shape: {image_array.shape}")
@@ -73,10 +77,11 @@ for alphabet_folder in alphabet_folders:
     if not all_images_same_shape:
         break  # Exit the outer loop if a different shape is found
 
+# Final result
 if all_images_same_shape:
-    print("All images in the training dataset have the shape (200, 200, 3)")
+    print("All images in the dataset have the shape (200, 200, 3).")
 else:
-    print("Not all images in the training dataset have the same shape.")
+    print("Not all images in the dataset have the same shape.")
 
 def load_and_normalize_image(image_path):
     image = load_img(image_path, target_size=(64, 64))  # Assuming the images are 64x64
@@ -86,7 +91,7 @@ def load_and_normalize_image(image_path):
 # Assuming 'extract_folder' and 'alphabet_train_folder' are defined as in your previous code:
 
 # Define the path to the 'asl_alphabet_train' folder
-alphabet_train_folder = os.path.join(extract_folder, 'Dataset', 'asl_alphabet_train', 'asl_alphabet_train')
+alphabet_train_folder = os.path.join(extract_folder, 'Dataset')
 
 # Create a list to store all image paths
 image_paths = []
@@ -125,3 +130,47 @@ print(f"Training data shape: {X_train.shape}")
 print(f"Validation data shape: {X_val.shape}")
 print(f"Test data shape: {X_test.shape}")
 
+# Convert numeric labels to one-hot encoded labels
+num_classes = len(label_encoder.classes_)  # Number of unique classes
+y_train = to_categorical(y_train, num_classes)
+y_val = to_categorical(y_val, num_classes)
+y_test = to_categorical(y_test, num_classes)
+
+print(f"One-hot encoded training labels shape: {y_train.shape}")
+
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=X_train.shape[1:]),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(num_classes, activation='softmax')  # Output layer with 'num_classes' units
+])
+
+model.summary()
+
+model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+history = model.fit(
+    X_train, y_train,
+    validation_data=(X_val, y_val),
+    epochs=10,  # You can increase epochs for better accuracy
+    batch_size=32
+)
+
+test_loss, test_accuracy = model.evaluate(X_test, y_test)
+print(f"Test Accuracy: {test_accuracy:.2f}")
+
+# Convert arrays to sets of tuples (for images, hash or paths can be used)
+train_hashes = set([tuple(x.flatten()) for x in X_train])
+test_hashes = set([tuple(x.flatten()) for x in X_test])
+
+# Check intersection
+overlap = train_hashes.intersection(test_hashes)
+print(f"Number of overlapping samples: {len(overlap)}")
