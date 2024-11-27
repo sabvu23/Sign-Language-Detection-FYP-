@@ -219,4 +219,3 @@ if test_image is not None:
     print(f"Predicted Class: {class_label}")
 else:
     print("Error: Could not load the image. Please check the file and try again.")
-
