@@ -21,6 +21,7 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.models import load_model
 import cv2
+from google.colab import files
 
 drive.mount('/content/drive')
 
@@ -177,7 +178,7 @@ print("Model saved as 'sign_language_model.h5'")
 
 # Load the trained model
 model = load_model('sign_language_model.h5')
-print("Model loaded successfully."
+print("Model loaded successfully.")
 
 def preprocess_image(image, target_size):
     # Resize the image
@@ -219,3 +220,4 @@ if test_image is not None:
     print(f"Predicted Class: {class_label}")
 else:
     print("Error: Could not load the image. Please check the file and try again.")
+
