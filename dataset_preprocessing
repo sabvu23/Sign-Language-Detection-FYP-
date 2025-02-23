@@ -1,0 +1,89 @@
+import os
+import cv2
+
+# Paths for your images and the output folder
+image_folder_train = r'C:\Users\Asus\Desktop\ASLDataset\Dataset\asl_alphabet_train' 
+image_folder_test =  r'C:\Users\Asus\Desktop\ASLDataset\Dataset\asl_alphabet_test' # Update this to your image folder path
+output_folder_train = r'C:\Users\Asus\Desktop\ASLDataset\Dataset2\asl_alphabet_train'  # Update this to your desired output folder path
+output_folder_test= r'C:\Users\Asus\Desktop\ASLDataset\Dataset2\asl_alphabet_train'
+# Create the output folder if it doesn't exist
+if not os.path.exists(output_folder_train):
+    os.makedirs(output_folder_train)
+if not os.path.exists(output_folder_test):
+    os.makedirs(output_folder_test)
+# Loop through all images in the image folder
+# for filename in os.listdir(image_folder_test):
+#     if filename.endswith(".jpg") or filename.endswith(".png"):
+#         # Construct the image path
+#         image_path = os.path.join(image_folder_test, filename)
+        
+#         # Read the image
+#         image = cv2.imread(image_path)
+
+#         # Convert the image to grayscale
+#         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+#         # Apply Gaussian Blur for noise reduction (kernel size of 5x5)
+#         blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
+
+#         # Construct the output path
+#         output_path = os.path.join(output_folder_test, filename)
+
+#         # Save the processed image
+#         cv2.imwrite(output_path, blurred_image)
+
+#         # Optional: Print progress
+#         print(f"Processed: {filename}")
+
+print("Image processing complete!")
+def preprocess_image(image_path):
+    # Load the image
+    img = cv2.imread(image_path)
+
+    # Convert the image to grayscale
+    grayscale_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Perform noise reduction (optional)
+    # You can adjust kernel size based on the level of noise
+    denoised_image = cv2.fastNlMeansDenoising(grayscale_image, None, 30, 7, 21)
+
+    return denoised_image
+
+# Iterate through each letter folder in the training dataset
+for letter_folder in os.listdir(image_folder_train):
+    letter_folder_path = os.path.join(image_folder_train, letter_folder)
+    
+    # Check if it's a directory (skip files, process only folders)
+    if os.path.isdir(letter_folder_path):
+        print(f'Processing folder: {letter_folder}')
+        
+        # Create the corresponding output folder for this letter
+        output_letter_folder = os.path.join(output_folder_train, letter_folder)
+        os.makedirs(output_letter_folder, exist_ok=True)  # Create folder if it doesn't exist
+
+        # Initialize a counter for image renaming (A1, A2, B1, B2, etc.)
+        image_counter = 1
+
+        # Loop through images in the current letter folder
+        for image_name in os.listdir(letter_folder_path):
+            image_path = os.path.join(letter_folder_path, image_name)
+            
+            # Check if it's an image file (you can add other checks here if necessary)
+            if image_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                # Preprocess the image
+                preprocessed_image = preprocess_image(image_path)
+
+                # Generate new image name as A1, A2, B1, B2, etc.
+                new_image_name = f"{letter_folder}{image_counter}.jpg"
+                
+                # Save the preprocessed image in the corresponding letter folder
+                save_path = os.path.join(output_letter_folder, new_image_name)
+                
+                # Save the preprocessed image
+                cv2.imwrite(save_path, preprocessed_image)
+                
+                # Increment the image counter for the next image
+                image_counter += 1
+
+        print(f'Finished processing folder: {letter_folder}')
+
